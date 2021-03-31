@@ -11,12 +11,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.chatbot.SmsReceiver.Companion.SMS_RECEIVED
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        chat_list.adapter = ChatsAdapter()
+        chat_list.adapter = ChatsAdapter{
+            val chatbotApi = ChatbotApi()
+            val response = chatbotApi.processOption(it)
+            chats.add(ChatbotItem(response))
+            chat_list.adapter?.notifyDataSetChanged()
+        }
         chat_list.layoutManager = LinearLayoutManager(this)
 
         send.setOnClickListener {
@@ -27,28 +32,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (ContextCompat.checkSelfPermission(this, RECEIVE_SMS) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, arrayOf(RECEIVE_SMS), 10)
-        } else{
-            registerSmsReceiver()
-        }
-
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (permissions.isNotEmpty()
-                && permissions[0] == RECEIVE_SMS
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            registerSmsReceiver()
-        }
-
-    }
-
-    fun registerSmsReceiver() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(SMS_RECEIVED)
-        registerReceiver(SmsReceiver(), intentFilter)
-    }
 }
